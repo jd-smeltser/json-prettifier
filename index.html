@@ -5,6 +5,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSON Prettifier</title>
     <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #13131a;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --accent-primary: #8b5cf6;
+            --accent-secondary: #6366f1;
+            --accent-tertiary: #ec4899;
+            --pill-bg: rgba(139, 92, 246, 0.1);
+            --pill-bg-hover: rgba(139, 92, 246, 0.2);
+            --pill-bg-selected: rgba(139, 92, 246, 0.3);
+            --pill-border: rgba(139, 92, 246, 0.3);
+            --pill-border-selected: rgba(139, 92, 246, 0.6);
+            --success-bg: rgba(34, 197, 94, 0.1);
+            --success-border: rgba(34, 197, 94, 0.3);
+            --success-text: #4ade80;
+            --error-bg: rgba(239, 68, 68, 0.1);
+            --error-border: rgba(239, 68, 68, 0.3);
+            --error-text: #f87171;
+            --code-bg: rgba(0, 0, 0, 0.3);
+            --json-key: #a78bfa;
+            --json-string: #6ee7b7;
+            --json-number: #fcd34d;
+            --json-boolean: #f9a8d4;
+            --json-null: #94a3b8;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #fafafa;
+            --bg-secondary: #f4f4f5;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(0, 0, 0, 0.08);
+            --text-primary: #18181b;
+            --text-secondary: #52525b;
+            --text-muted: #a1a1aa;
+            --accent-primary: #7c3aed;
+            --accent-secondary: #4f46e5;
+            --accent-tertiary: #db2777;
+            --pill-bg: rgba(124, 58, 237, 0.08);
+            --pill-bg-hover: rgba(124, 58, 237, 0.15);
+            --pill-bg-selected: rgba(124, 58, 237, 0.25);
+            --pill-border: rgba(124, 58, 237, 0.2);
+            --pill-border-selected: rgba(124, 58, 237, 0.5);
+            --success-bg: rgba(34, 197, 94, 0.1);
+            --success-border: rgba(34, 197, 94, 0.3);
+            --success-text: #16a34a;
+            --error-bg: rgba(239, 68, 68, 0.1);
+            --error-border: rgba(239, 68, 68, 0.3);
+            --error-text: #dc2626;
+            --code-bg: rgba(0, 0, 0, 0.05);
+            --json-key: #7c3aed;
+            --json-string: #059669;
+            --json-number: #d97706;
+            --json-boolean: #db2777;
+            --json-null: #64748b;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,164 +72,448 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
             padding: 20px;
+            transition: background 0.3s ease, color 0.3s ease;
+            background-image:
+                radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.1) 0px, transparent 50%);
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            backdrop-filter: blur(10px);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px 30px;
+        }
+
         h1 {
-            color: white;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            font-size: 2em;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .card {
-            background: white;
+        .theme-toggle {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
             border-radius: 12px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .theme-toggle:hover {
+            background: var(--pill-bg-hover);
+            border-color: var(--pill-border);
+            transform: translateY(-2px);
+        }
+
+        .glass-card {
+            backdrop-filter: blur(10px);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
             padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-
-        .info {
-            background: #f0f9ff;
-            border-left: 4px solid #0284c7;
-            padding: 15px;
             margin-bottom: 20px;
-            border-radius: 4px;
         }
 
-        .info h2 {
-            color: #0284c7;
-            font-size: 1.2em;
-            margin-bottom: 10px;
+        .info-banner {
+            background: var(--success-bg);
+            border: 1px solid var(--success-border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
         }
 
-        .info p {
-            color: #334155;
-            margin: 5px 0;
+        .info-banner h2 {
+            color: var(--success-text);
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .info-banner p {
+            color: var(--text-secondary);
             font-size: 0.95em;
+            line-height: 1.6;
+            margin: 8px 0;
         }
 
-        .info code {
-            background: #e0f2fe;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: 'Courier New', monospace;
-            color: #0369a1;
+        .info-banner code {
+            background: var(--code-bg);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-size: 0.9em;
+            color: var(--accent-primary);
         }
 
-        .error {
-            background: #fef2f2;
-            border-left: 4px solid #dc2626;
-            padding: 15px;
+        .error-banner {
+            background: var(--error-bg);
+            border: 1px solid var(--error-border);
+            border-radius: 12px;
+            padding: 20px;
             margin-bottom: 20px;
-            border-radius: 4px;
-            color: #991b1b;
         }
 
-        .success {
-            background: #f0fdf4;
-            border-left: 4px solid #16a34a;
-            padding: 15px;
+        .error-banner h3 {
+            color: var(--error-text);
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
             margin-bottom: 20px;
-            border-radius: 4px;
+            flex-wrap: wrap;
+            align-items: center;
         }
 
-        .success h3 {
-            color: #15803d;
-            margin-bottom: 10px;
+        .controls-label {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .toggle-group {
+            display: flex;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            padding: 8px 16px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn.active {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .toggle-btn:hover:not(.active) {
+            background: var(--pill-bg-hover);
+        }
+
+        .selection-section {
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .select-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 4px 12px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: var(--pill-bg-hover);
+            border-color: var(--pill-border);
+            color: var(--text-secondary);
+        }
+
+        .pills-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .pill {
+            background: var(--pill-bg);
+            border: 1px solid var(--pill-border);
+            border-radius: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pill:hover {
+            background: var(--pill-bg-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
+        }
+
+        .pill.selected {
+            background: var(--pill-bg-selected);
+            border-color: var(--pill-border-selected);
+            color: var(--accent-primary);
+            font-weight: 500;
+        }
+
+        .pill .indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--pill-border);
+            transition: all 0.2s ease;
+        }
+
+        .pill.selected .indicator {
+            background: var(--accent-primary);
+            box-shadow: 0 0 8px var(--accent-primary);
+        }
+
+        .nested-keys {
+            margin-left: 24px;
+            margin-top: 12px;
+            padding-left: 16px;
+            border-left: 2px solid var(--glass-border);
+        }
+
+        .nested-key {
+            margin: 6px 0;
+        }
+
+        .nested-pill {
+            font-size: 0.85em;
+            padding: 6px 12px;
+        }
+
+        .output-section {
+            position: relative;
         }
 
         pre {
-            background: #1e293b;
-            color: #e2e8f0;
-            padding: 20px;
-            border-radius: 8px;
+            background: var(--code-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 24px;
             overflow-x: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
+            font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
             line-height: 1.6;
             max-height: 600px;
             overflow-y: auto;
         }
 
-        .json-key {
-            color: #60a5fa;
+        .json-key { color: var(--json-key); }
+        .json-string { color: var(--json-string); }
+        .json-number { color: var(--json-number); }
+        .json-boolean { color: var(--json-boolean); }
+        .json-null { color: var(--json-null); }
+
+        .actions-bar {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
         }
 
-        .json-string {
-            color: #34d399;
+        .btn {
+            background: var(--accent-primary);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .json-number {
-            color: #fbbf24;
+        .btn:hover {
+            background: var(--accent-secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
         }
 
-        .json-boolean {
-            color: #f472b6;
+        .btn.secondary {
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
         }
 
-        .json-null {
-            color: #94a3b8;
+        .btn.secondary:hover {
+            background: var(--pill-bg-hover);
+            border-color: var(--pill-border);
         }
 
         .stats {
-            margin-top: 15px;
-            padding: 10px;
-            background: #f8fafc;
-            border-radius: 6px;
-            color: #64748b;
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--text-secondary);
             font-size: 0.9em;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
         }
 
-        .copy-button {
-            background: #0284c7;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-top: 15px;
-            transition: background 0.3s;
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .copy-button:hover {
-            background: #0369a1;
-        }
-
-        .copy-button:active {
-            background: #075985;
+        .stat-value {
+            color: var(--accent-primary);
+            font-weight: 600;
         }
 
         .footer {
             text-align: center;
-            color: white;
-            margin-top: 30px;
-            opacity: 0.9;
+            color: var(--text-muted);
+            margin-top: 40px;
+            font-size: 0.9em;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--glass-bg);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--pill-border);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--pill-border-selected);
+        }
+
+        /* Markdown output styles */
+        .markdown-output {
+            background: var(--code-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 24px;
+            overflow-x: auto;
+            font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            max-height: 600px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .markdown-output h1, .markdown-output h2, .markdown-output h3 {
+            color: var(--accent-primary);
+            margin: 16px 0 8px 0;
+        }
+
+        .markdown-output ul {
+            margin-left: 20px;
+        }
+
+        .markdown-output li {
+            margin: 4px 0;
+        }
+
+        .markdown-output code {
+            background: var(--pill-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--accent-primary);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>JSON Prettifier</h1>
-        <div class="card">
-            <div id="content"></div>
+        <div class="header">
+            <h1>JSON Prettifier</h1>
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <span id="theme-icon">🌙</span>
+            </button>
         </div>
+        <div id="content"></div>
         <div class="footer">
-            <p>Created with GitHub Pages</p>
+            <p>Created with GitHub Pages • Modern JSON Explorer</p>
         </div>
     </div>
 
     <script>
+        let jsonData = null;
+        let selectedKeys = new Set();
+        let outputFormat = 'json'; // 'json' or 'markdown'
+
+        // Theme management
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', newTheme);
+            document.getElementById('theme-icon').textContent = newTheme === 'light' ? '☀️' : '🌙';
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // Initialize theme
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.getElementById('theme-icon').textContent = savedTheme === 'light' ? '☀️' : '🌙';
+
         function getUrlParameter(name) {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get(name);
@@ -194,38 +538,192 @@
             });
         }
 
-        function countJsonElements(obj) {
-            let keys = 0;
-            let values = 0;
+        function toggleKey(key, isNested = false, parentKey = null) {
+            const fullKey = parentKey ? `${parentKey}.${key}` : key;
+            if (selectedKeys.has(fullKey)) {
+                selectedKeys.delete(fullKey);
+            } else {
+                selectedKeys.add(fullKey);
+            }
+            updateOutput();
+            updatePillStates();
+        }
 
-            function count(item) {
-                if (Array.isArray(item)) {
-                    values += item.length;
-                    item.forEach(count);
-                } else if (item !== null && typeof item === 'object') {
-                    const objKeys = Object.keys(item);
-                    keys += objKeys.length;
-                    objKeys.forEach(key => count(item[key]));
+        function selectAll() {
+            selectedKeys.clear();
+            Object.keys(jsonData).forEach(key => {
+                selectedKeys.add(key);
+                addNestedKeys(jsonData[key], key);
+            });
+            updateOutput();
+            updatePillStates();
+        }
+
+        function addNestedKeys(obj, parentKey) {
+            if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+                Object.keys(obj).forEach(key => {
+                    const fullKey = `${parentKey}.${key}`;
+                    selectedKeys.add(fullKey);
+                    addNestedKeys(obj[key], fullKey);
+                });
+            }
+        }
+
+        function deselectAll() {
+            selectedKeys.clear();
+            updateOutput();
+            updatePillStates();
+        }
+
+        function updatePillStates() {
+            document.querySelectorAll('.pill').forEach(pill => {
+                const key = pill.dataset.key;
+                if (selectedKeys.has(key)) {
+                    pill.classList.add('selected');
                 } else {
-                    values++;
+                    pill.classList.remove('selected');
                 }
+            });
+        }
+
+        function getValueAtPath(obj, path) {
+            return path.split('.').reduce((current, key) => current?.[key], obj);
+        }
+
+        function buildSelectedJson() {
+            if (selectedKeys.size === 0) return jsonData;
+
+            const result = {};
+            selectedKeys.forEach(fullKey => {
+                const keys = fullKey.split('.');
+                let current = result;
+                let sourceCurrent = jsonData;
+
+                keys.forEach((key, index) => {
+                    sourceCurrent = sourceCurrent[key];
+                    if (index === keys.length - 1) {
+                        current[key] = sourceCurrent;
+                    } else {
+                        if (!current[key]) {
+                            current[key] = {};
+                        }
+                        current = current[key];
+                    }
+                });
+            });
+
+            return result;
+        }
+
+        function buildMarkdown() {
+            if (selectedKeys.size === 0) {
+                return convertToMarkdown(jsonData);
             }
 
-            count(obj);
-            return { keys, values };
+            const selectedData = buildSelectedJson();
+            return convertToMarkdown(selectedData);
+        }
+
+        function convertToMarkdown(obj, level = 1) {
+            let markdown = '';
+            const heading = '#'.repeat(Math.min(level, 6));
+
+            if (Array.isArray(obj)) {
+                obj.forEach((item, index) => {
+                    if (typeof item === 'object' && item !== null) {
+                        markdown += `\n${heading} Item ${index + 1}\n\n`;
+                        markdown += convertToMarkdown(item, level + 1);
+                    } else {
+                        markdown += `- ${item}\n`;
+                    }
+                });
+            } else if (obj && typeof obj === 'object') {
+                Object.entries(obj).forEach(([key, value]) => {
+                    if (typeof value === 'object' && value !== null) {
+                        markdown += `\n${heading} ${key}\n\n`;
+                        markdown += convertToMarkdown(value, level + 1);
+                    } else {
+                        markdown += `- **${key}**: \`${value}\`\n`;
+                    }
+                });
+            } else {
+                markdown += `${obj}\n`;
+            }
+
+            return markdown;
+        }
+
+        function updateOutput() {
+            const outputSection = document.getElementById('output-section');
+            if (!outputSection) return;
+
+            if (outputFormat === 'json') {
+                const selectedData = buildSelectedJson();
+                const prettified = JSON.stringify(selectedData, null, 2);
+                const highlighted = syntaxHighlight(prettified);
+                outputSection.innerHTML = `<pre>${highlighted}</pre>`;
+            } else {
+                const markdown = buildMarkdown();
+                outputSection.innerHTML = `<div class="markdown-output">${markdown}</div>`;
+            }
+        }
+
+        function setOutputFormat(format) {
+            outputFormat = format;
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            updateOutput();
         }
 
         function copyToClipboard() {
-            const pre = document.querySelector('pre');
-            const text = pre.textContent;
+            let text;
+            if (outputFormat === 'json') {
+                const selectedData = buildSelectedJson();
+                text = JSON.stringify(selectedData, null, 2);
+            } else {
+                text = buildMarkdown();
+            }
+
             navigator.clipboard.writeText(text).then(() => {
-                const button = document.querySelector('.copy-button');
-                const originalText = button.textContent;
-                button.textContent = 'Copied!';
+                const button = event.target;
+                const originalText = button.innerHTML;
+                button.innerHTML = '✓ Copied!';
                 setTimeout(() => {
-                    button.textContent = originalText;
+                    button.innerHTML = originalText;
                 }, 2000);
             });
+        }
+
+        function renderNestedKeys(obj, parentKey = '', level = 0) {
+            if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
+                return '';
+            }
+
+            const keys = Object.keys(obj);
+            if (keys.length === 0) return '';
+
+            let html = '<div class="nested-keys">';
+            keys.forEach(key => {
+                const fullKey = parentKey ? `${parentKey}.${key}` : key;
+                const value = obj[key];
+                const isSelected = selectedKeys.has(fullKey);
+
+                html += `
+                    <div class="nested-key">
+                        <div class="pill nested-pill ${isSelected ? 'selected' : ''}"
+                             data-key="${fullKey}"
+                             onclick="toggleKey('${key}', true, '${parentKey}')">
+                            <span class="indicator"></span>
+                            ${key}
+                        </div>
+                        ${renderNestedKeys(value, fullKey, level + 1)}
+                    </div>
+                `;
+            });
+            html += '</div>';
+            return html;
         }
 
         function displayJson() {
@@ -234,63 +732,138 @@
 
             if (!jsonString) {
                 contentDiv.innerHTML = `
-                    <div class="info">
-                        <h2>How to use</h2>
-                        <p>Add your JSON to the URL using the <code>jsonString</code> parameter:</p>
-                        <p style="margin-top: 10px;"><code>${window.location.origin}${window.location.pathname}?jsonString={"key":"value"}</code></p>
-                        <p style="margin-top: 15px;"><strong>Example:</strong></p>
-                        <p><code>${window.location.origin}${window.location.pathname}?jsonString={"name":"John","age":30,"city":"New York"}</code></p>
+                    <div class="glass-card">
+                        <div class="info-banner">
+                            <h2>How to use</h2>
+                            <p>Add your JSON to the URL using the <code>jsonString</code> parameter:</p>
+                            <p style="margin-top: 10px;"><code>${window.location.origin}${window.location.pathname}?jsonString={"key":"value"}</code></p>
+                            <p style="margin-top: 15px;"><strong>Example:</strong></p>
+                            <p><code>${window.location.origin}${window.location.pathname}?jsonString={"name":"John","age":30,"city":"New York"}</code></p>
+                        </div>
                     </div>
                 `;
                 return;
             }
 
             try {
-                // Decode URL-encoded string
                 const decodedString = decodeURIComponent(jsonString);
+                jsonData = JSON.parse(decodedString);
 
-                // Parse JSON
-                const jsonObj = JSON.parse(decodedString);
+                // Generate top-level keys
+                const topLevelKeys = Object.keys(jsonData);
+                let pillsHtml = '';
+                topLevelKeys.forEach(key => {
+                    const isSelected = selectedKeys.has(key);
+                    pillsHtml += `
+                        <div>
+                            <div class="pill ${isSelected ? 'selected' : ''}"
+                                 data-key="${key}"
+                                 onclick="toggleKey('${key}')">
+                                <span class="indicator"></span>
+                                ${key}
+                            </div>
+                            ${renderNestedKeys(jsonData[key], key)}
+                        </div>
+                    `;
+                });
 
-                // Prettify JSON
-                const prettified = JSON.stringify(jsonObj, null, 2);
-
-                // Get stats
-                const stats = countJsonElements(jsonObj);
-                const charCount = prettified.length;
-                const lineCount = prettified.split('\n').length;
-
-                // Apply syntax highlighting
-                const highlighted = syntaxHighlight(prettified);
+                const stats = {
+                    keys: topLevelKeys.length,
+                    chars: JSON.stringify(jsonData).length,
+                    lines: JSON.stringify(jsonData, null, 2).split('\n').length
+                };
 
                 contentDiv.innerHTML = `
-                    <div class="success">
-                        <h3>JSON Successfully Parsed</h3>
-                    </div>
-                    <pre>${highlighted}</pre>
-                    <button class="copy-button" onclick="copyToClipboard()">Copy to Clipboard</button>
-                    <div class="stats">
-                        <strong>Stats:</strong> ${stats.keys} keys, ${lineCount} lines, ${charCount} characters
+                    <div class="glass-card">
+                        <div class="controls">
+                            <span class="controls-label">Output Format:</span>
+                            <div class="toggle-group">
+                                <button class="toggle-btn active" onclick="setOutputFormat('json')">JSON</button>
+                                <button class="toggle-btn" onclick="setOutputFormat('markdown')">Markdown</button>
+                            </div>
+                        </div>
+
+                        <div class="selection-section">
+                            <div class="section-header">
+                                <span class="section-title">Select Keys</span>
+                                <div class="select-actions">
+                                    <button class="action-btn" onclick="selectAll()">Select All</button>
+                                    <button class="action-btn" onclick="deselectAll()">Deselect All</button>
+                                </div>
+                            </div>
+                            <div class="pills-grid">
+                                ${pillsHtml}
+                            </div>
+                        </div>
+
+                        <div class="output-section" id="output-section">
+                            <pre>${syntaxHighlight(JSON.stringify(jsonData, null, 2))}</pre>
+                        </div>
+
+                        <div class="actions-bar">
+                            <button class="btn" onclick="copyToClipboard()">
+                                📋 Copy to Clipboard
+                            </button>
+                            <button class="btn secondary" onclick="deselectAll()">
+                                🔄 Reset Selection
+                            </button>
+                        </div>
+
+                        <div class="stats">
+                            <div class="stat-item">
+                                <span>Keys:</span>
+                                <span class="stat-value">${stats.keys}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Lines:</span>
+                                <span class="stat-value">${stats.lines}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Characters:</span>
+                                <span class="stat-value">${stats.chars}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Selected:</span>
+                                <span class="stat-value" id="selected-count">0</span>
+                            </div>
+                        </div>
                     </div>
                 `;
+
+                updateSelectedCount();
             } catch (error) {
                 contentDiv.innerHTML = `
-                    <div class="error">
-                        <h3>Error parsing JSON</h3>
-                        <p><strong>Error message:</strong> ${error.message}</p>
-                        <p style="margin-top: 10px;">Please make sure your JSON is valid and properly URL-encoded.</p>
-                    </div>
-                    <div class="info">
-                        <h2>Tips:</h2>
-                        <p>• Make sure your JSON is valid</p>
-                        <p>• Special characters should be URL-encoded</p>
-                        <p>• Use <code>encodeURIComponent()</code> in JavaScript to encode your JSON string</p>
+                    <div class="glass-card">
+                        <div class="error-banner">
+                            <h3>Error parsing JSON</h3>
+                            <p><strong>Error message:</strong> ${error.message}</p>
+                            <p style="margin-top: 10px;">Please make sure your JSON is valid and properly URL-encoded.</p>
+                        </div>
+                        <div class="info-banner">
+                            <h2>Tips:</h2>
+                            <p>• Make sure your JSON is valid</p>
+                            <p>• Special characters should be URL-encoded</p>
+                            <p>• Use <code>encodeURIComponent()</code> in JavaScript to encode your JSON string</p>
+                        </div>
                     </div>
                 `;
             }
         }
 
-        // Run on page load
+        function updateSelectedCount() {
+            const countElement = document.getElementById('selected-count');
+            if (countElement) {
+                countElement.textContent = selectedKeys.size;
+            }
+        }
+
+        // Override updateOutput to also update count
+        const originalUpdateOutput = updateOutput;
+        updateOutput = function() {
+            originalUpdateOutput();
+            updateSelectedCount();
+        };
+
         displayJson();
     </script>
 </body>
