@@ -15,9 +15,11 @@
             --text-muted: #71717a;
             --accent-primary: #8b5cf6;
             --accent-secondary: #6366f1;
-            --selected-bg: rgba(139, 92, 246, 0.2);
-            --selected-border: rgba(139, 92, 246, 0.5);
-            --hover-bg: rgba(139, 92, 246, 0.1);
+            --pill-bg: rgba(139, 92, 246, 0.1);
+            --pill-border: rgba(139, 92, 246, 0.3);
+            --selected-bg: rgba(139, 92, 246, 0.25);
+            --selected-border: rgba(139, 92, 246, 0.6);
+            --hover-bg: rgba(139, 92, 246, 0.15);
             --json-key: #a78bfa;
             --json-string: #6ee7b7;
             --json-number: #fcd34d;
@@ -35,9 +37,11 @@
             --text-muted: #a1a1aa;
             --accent-primary: #7c3aed;
             --accent-secondary: #4f46e5;
+            --pill-bg: rgba(124, 58, 237, 0.08);
+            --pill-border: rgba(124, 58, 237, 0.2);
             --selected-bg: rgba(124, 58, 237, 0.2);
             --selected-border: rgba(124, 58, 237, 0.5);
-            --hover-bg: rgba(124, 58, 237, 0.1);
+            --hover-bg: rgba(124, 58, 237, 0.12);
             --json-key: #7c3aed;
             --json-string: #059669;
             --json-number: #d97706;
@@ -100,57 +104,109 @@
         }
 
         .interactive-json {
-            padding: 20px;
-            font-family: 'SF Mono', 'Consolas', monospace;
+            padding: 16px;
+        }
+
+        .json-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 8px 0;
+            margin: 4px 0;
+        }
+
+        .json-nested {
+            margin-left: 24px;
+            padding-left: 16px;
+            border-left: 2px solid var(--glass-border);
+        }
+
+        .json-object-container {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px;
+            margin: 8px 0;
+        }
+
+        .json-key-pill {
+            background: var(--pill-bg);
+            border: 1px solid var(--pill-border);
+            border-radius: 8px;
+            padding: 6px 12px;
             font-size: 14px;
-            line-height: 1.8;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            white-space: pre-wrap;
-        }
-
-        .json-line {
-            display: block;
-            padding: 4px 0;
-        }
-
-        .json-key-wrapper {
-            display: inline;
+            font-weight: 500;
+            color: var(--text-primary);
             cursor: pointer;
-            padding: 2px 4px;
-            margin: -2px -4px;
-            border-radius: 4px;
-            transition: all 0.15s;
+            transition: all 0.2s;
+            user-select: none;
+            white-space: nowrap;
+            min-width: 80px;
+            text-align: center;
             position: relative;
         }
 
-        .json-key-wrapper:hover {
+        .json-key-pill:hover {
             background: var(--hover-bg);
+            transform: translateY(-1px);
         }
 
-        .json-key-wrapper.selected {
+        .json-key-pill:active {
+            transform: translateY(0);
+        }
+
+        .json-key-pill.selected {
             background: var(--selected-bg);
-            border: 1px solid var(--selected-border);
+            border-color: var(--selected-border);
+            color: var(--accent-primary);
         }
 
-        .json-key-wrapper.selected::before {
+        .json-key-pill.selected::before {
             content: "✓";
             position: absolute;
-            left: -16px;
+            left: -20px;
             color: var(--accent-primary);
             font-weight: bold;
+            font-size: 16px;
         }
 
-        .json-key {
-            color: var(--json-key);
-            font-weight: 500;
+        .json-value {
+            flex: 1;
+            color: var(--text-primary);
+            font-size: 14px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            display: flex;
+            align-items: center;
+            min-height: 32px;
         }
 
-        .json-string { color: var(--json-string); }
-        .json-number { color: var(--json-number); }
-        .json-boolean { color: var(--json-boolean); }
-        .json-null { color: var(--json-null); }
-        .json-punctuation { color: var(--text-secondary); }
+        .json-value.string {
+            color: var(--json-string);
+        }
+
+        .json-value.number {
+            color: var(--json-number);
+        }
+
+        .json-value.boolean {
+            color: var(--json-boolean);
+        }
+
+        .json-value.null {
+            color: var(--json-null);
+            font-style: italic;
+        }
+
+        .json-array-badge {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-right: 8px;
+        }
 
         .tabs-container {
             display: flex;
@@ -525,69 +581,96 @@
         }
 
         function updateSelectionUI() {
-            document.querySelectorAll('.json-key-wrapper').forEach(wrapper => {
-                const path = wrapper.dataset.path;
+            document.querySelectorAll('.json-key-pill').forEach(pill => {
+                const path = pill.dataset.path;
                 if (selectedKeys.has(path)) {
-                    wrapper.classList.add('selected');
+                    pill.classList.add('selected');
                 } else {
-                    wrapper.classList.remove('selected');
+                    pill.classList.remove('selected');
                 }
             });
         }
 
-        function renderInteractiveJSON(obj, indent = 0, parentPath = '') {
-            let html = '';
-            const indentStr = '  '.repeat(indent);
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
 
-            if (obj === null) {
-                return `<span class="json-null">null</span>`;
+        function renderValue(value) {
+            if (value === null) {
+                return `<span class="json-value null">null</span>`;
             }
 
-            if (typeof obj !== 'object') {
-                if (typeof obj === 'string') {
-                    return `<span class="json-string">"${obj}"</span>`;
-                } else if (typeof obj === 'number') {
-                    return `<span class="json-number">${obj}</span>`;
-                } else if (typeof obj === 'boolean') {
-                    return `<span class="json-boolean">${obj}</span>`;
-                }
-                return String(obj);
+            const type = typeof value;
+            if (type === 'string') {
+                return `<span class="json-value string">${escapeHtml(value)}</span>`;
+            } else if (type === 'number') {
+                return `<span class="json-value number">${value}</span>`;
+            } else if (type === 'boolean') {
+                return `<span class="json-value boolean">${value}</span>`;
+            }
+            return `<span class="json-value">${escapeHtml(String(value))}</span>`;
+        }
+
+        function renderInteractiveJSON(obj, parentPath = '', level = 0) {
+            let html = '';
+
+            if (obj === null || typeof obj !== 'object') {
+                return renderValue(obj);
             }
 
             if (Array.isArray(obj)) {
-                html += `<span class="json-punctuation">[</span>\n`;
+                html += '<div class="json-nested">';
                 obj.forEach((item, index) => {
-                    html += indentStr + '  ' + renderInteractiveJSON(item, indent + 1, `${parentPath}[${index}]`);
-                    if (index < obj.length - 1) html += `<span class="json-punctuation">,</span>`;
-                    html += '\n';
+                    const path = `${parentPath}[${index}]`;
+
+                    if (item !== null && typeof item === 'object') {
+                        html += `<div class="json-object-container">`;
+                        html += `<div class="json-array-badge">Item ${index + 1}</div>`;
+                        html += renderInteractiveJSON(item, path, level + 1);
+                        html += `</div>`;
+                    } else {
+                        html += `<div class="json-item">`;
+                        html += `<div class="json-array-badge">${index}</div>`;
+                        html += renderValue(item);
+                        html += `</div>`;
+                    }
                 });
-                html += indentStr + `<span class="json-punctuation">]</span>`;
+                html += '</div>';
                 return html;
             }
 
-            html += `<span class="json-punctuation">{</span>\n`;
+            // Object
             const keys = Object.keys(obj);
-            keys.forEach((key, index) => {
+            keys.forEach(key => {
                 const path = parentPath ? `${parentPath}.${key}` : key;
                 const value = obj[key];
                 const isObject = value !== null && typeof value === 'object';
+                const isArray = Array.isArray(value);
 
-                html += indentStr + '  ';
-                html += `<span class="json-key-wrapper" data-path="${path}" onclick="toggleKey('${path}')">`;
-                html += `<span class="json-key">"${key}"</span>`;
-                html += `</span>`;
-                html += `<span class="json-punctuation">: </span>`;
+                html += `<div class="json-item">`;
+                html += `<div class="json-key-pill" data-path="${path}" onclick="toggleKey('${path}')">`;
+                html += escapeHtml(key);
+                html += `</div>`;
 
                 if (isObject) {
-                    html += renderInteractiveJSON(value, indent + 1, path);
-                } else {
-                    html += renderInteractiveJSON(value, indent + 1, path);
-                }
+                    if (isArray) {
+                        html += `<div class="json-value"><span class="json-array-badge">${value.length} items</span></div>`;
+                    } else {
+                        html += `<div class="json-value"><span class="json-array-badge">${Object.keys(value).length} keys</span></div>`;
+                    }
+                    html += `</div>`;
 
-                if (index < keys.length - 1) html += `<span class="json-punctuation">,</span>`;
-                html += '\n';
+                    // Render nested content
+                    html += `<div class="json-nested">`;
+                    html += renderInteractiveJSON(value, path, level + 1);
+                    html += `</div>`;
+                } else {
+                    html += renderValue(value);
+                    html += `</div>`;
+                }
             });
-            html += indentStr + `<span class="json-punctuation">}</span>`;
 
             return html;
         }
@@ -718,7 +801,7 @@
 
         function selectAll() {
             selectedKeys.clear();
-            const allPaths = Array.from(document.querySelectorAll('.json-key-wrapper')).map(el => el.dataset.path);
+            const allPaths = Array.from(document.querySelectorAll('.json-key-pill')).map(el => el.dataset.path);
             allPaths.forEach(path => selectedKeys.add(path));
             updateSelectionUI();
             updateStats();
@@ -748,7 +831,7 @@
         }
 
         function updateStats() {
-            const totalKeys = document.querySelectorAll('.json-key-wrapper').length;
+            const totalKeys = document.querySelectorAll('.json-key-pill').length;
             document.getElementById('total-keys').textContent = totalKeys;
             document.getElementById('selected-keys').textContent = selectedKeys.size;
         }
