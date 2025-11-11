@@ -103,8 +103,122 @@
             max-width: 100%;
         }
 
+        .main-view {
+            position: relative;
+        }
+
         .interactive-json {
             padding: 16px;
+        }
+
+        .markdown-view {
+            padding: 24px;
+            display: none;
+        }
+
+        .markdown-view.show {
+            display: block;
+        }
+
+        .markdown-view h1 {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin: 24px 0 16px 0;
+            line-height: 1.3;
+        }
+
+        .markdown-view h1:first-child {
+            margin-top: 0;
+        }
+
+        .markdown-view h2 {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: var(--accent-secondary);
+            margin: 20px 0 12px 0;
+            line-height: 1.4;
+        }
+
+        .markdown-view h3 {
+            font-size: 1.25em;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 16px 0 10px 0;
+            line-height: 1.4;
+        }
+
+        .markdown-view h4,
+        .markdown-view h5,
+        .markdown-view h6 {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 14px 0 8px 0;
+        }
+
+        .markdown-view p {
+            margin: 12px 0;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        .markdown-view ul,
+        .markdown-view ol {
+            margin: 12px 0;
+            padding-left: 24px;
+        }
+
+        .markdown-view li {
+            margin: 6px 0;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        .markdown-view code {
+            background: var(--pill-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-size: 0.9em;
+            color: var(--accent-primary);
+        }
+
+        .markdown-view pre {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+            overflow-x: auto;
+        }
+
+        .markdown-view pre code {
+            background: transparent;
+            padding: 0;
+        }
+
+        .markdown-view strong {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-view em {
+            font-style: italic;
+        }
+
+        .markdown-view hr {
+            border: none;
+            border-top: 1px solid var(--glass-border);
+            margin: 24px 0;
+        }
+
+        .markdown-view blockquote {
+            border-left: 4px solid var(--accent-primary);
+            padding-left: 16px;
+            margin: 16px 0;
+            color: var(--text-secondary);
+            font-style: italic;
         }
 
         .json-item {
@@ -290,55 +404,6 @@
             margin-top: 4px;
         }
 
-        .preview-section {
-            padding: 20px;
-            background: var(--bg-secondary);
-            display: none;
-        }
-
-        .preview-section.show {
-            display: block;
-        }
-
-        .preview-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .preview-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .preview-close-btn {
-            background: transparent;
-            border: 1px solid var(--glass-border);
-            border-radius: 6px;
-            padding: 4px 8px;
-            color: var(--text-secondary);
-            font-size: 12px;
-            cursor: pointer;
-        }
-
-        .preview-content {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 20px;
-            font-family: 'SF Mono', 'Consolas', monospace;
-            font-size: 13px;
-            line-height: 1.6;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            white-space: pre-wrap;
-            max-height: 400px;
-            overflow-y: auto;
-        }
 
         .btn {
             flex: 1;
@@ -446,17 +511,6 @@
             border-radius: 4px;
         }
 
-        .markdown-output {
-            color: var(--text-primary);
-            white-space: pre-wrap;
-        }
-
-        .markdown-output h1,
-        .markdown-output h2,
-        .markdown-output h3 {
-            color: var(--accent-primary);
-            margin: 16px 0 8px 0;
-        }
     </style>
 </head>
 <body>
@@ -527,6 +581,11 @@
             }
             updateSelectionUI();
             updateStats();
+
+            // Update markdown view if showing
+            if (outputFormat === 'markdown') {
+                updateMainView();
+            }
         }
 
         function updateSelectionUI() {
@@ -721,23 +780,76 @@
             }
         }
 
-        function showPreview() {
-            const previewSection = document.getElementById('preview-section');
-            const previewContent = document.getElementById('preview-content');
-            const text = getOutput();
+        function markdownToHTML(markdown) {
+            let html = markdown;
 
-            if (outputFormat === 'json') {
-                previewContent.innerHTML = `<pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word;">${escapeHtml(text)}</pre>`;
-            } else {
-                previewContent.innerHTML = `<div class="markdown-output">${text}</div>`;
+            // Headers
+            html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+            html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+            html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+            // Bold
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
+
+            // Italic
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            html = html.replace(/_(.*?)_/g, '<em>$1</em>');
+
+            // Code
+            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+            // Line breaks - convert double newlines to paragraphs
+            const lines = html.split('\n');
+            let inParagraph = false;
+            let result = [];
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+
+                if (line === '') {
+                    if (inParagraph) {
+                        result.push('</p>');
+                        inParagraph = false;
+                    }
+                } else if (line.startsWith('<h') || line.startsWith('<ul') || line.startsWith('<ol')) {
+                    if (inParagraph) {
+                        result.push('</p>');
+                        inParagraph = false;
+                    }
+                    result.push(line);
+                } else {
+                    if (!inParagraph) {
+                        result.push('<p>');
+                        inParagraph = true;
+                    }
+                    result.push(line);
+                }
             }
 
-            previewSection.classList.add('show');
-            previewSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            if (inParagraph) {
+                result.push('</p>');
+            }
+
+            return result.join('\n');
         }
 
-        function closePreview() {
-            document.getElementById('preview-section').classList.remove('show');
+        function updateMainView() {
+            const jsonView = document.getElementById('json-view');
+            const markdownView = document.getElementById('markdown-view');
+
+            if (outputFormat === 'json') {
+                jsonView.style.display = 'block';
+                markdownView.classList.remove('show');
+            } else {
+                jsonView.style.display = 'none';
+                markdownView.classList.add('show');
+
+                // Render markdown
+                const markdownText = buildMarkdown();
+                const html = markdownToHTML(markdownText);
+                markdownView.innerHTML = html;
+            }
         }
 
         function copyToClipboard() {
@@ -755,12 +867,22 @@
             allPaths.forEach(path => selectedKeys.add(path));
             updateSelectionUI();
             updateStats();
+
+            // Update markdown view if showing
+            if (outputFormat === 'markdown') {
+                updateMainView();
+            }
         }
 
         function deselectAll() {
             selectedKeys.clear();
             updateSelectionUI();
             updateStats();
+
+            // Update markdown view if showing
+            if (outputFormat === 'markdown') {
+                updateMainView();
+            }
         }
 
         function switchFormat(format) {
@@ -775,20 +897,16 @@
                 mdOptions.style.display = format === 'markdown' ? 'block' : 'none';
             }
 
-            // Update preview if it's showing
-            const previewSection = document.getElementById('preview-section');
-            if (previewSection && previewSection.classList.contains('show')) {
-                showPreview();
-            }
+            // Update main view
+            updateMainView();
         }
 
         function toggleRootHeader() {
             includeRootHeader = document.getElementById('root-header-toggle').checked;
 
-            // Update preview if it's showing
-            const previewSection = document.getElementById('preview-section');
-            if (previewSection && previewSection.classList.contains('show')) {
-                showPreview();
+            // Update markdown view if showing
+            if (outputFormat === 'markdown') {
+                updateMainView();
             }
         }
 
@@ -835,11 +953,13 @@
                         </div>
                     </div>
 
-                    <div class="interactive-json">${jsonHTML}</div>
+                    <div class="main-view">
+                        <div class="interactive-json" id="json-view">${jsonHTML}</div>
+                        <div class="markdown-view" id="markdown-view"></div>
+                    </div>
 
                     <div class="buttons-bar">
-                        <button class="btn" onclick="showPreview()">👁️ Preview</button>
-                        <button class="btn secondary" onclick="copyToClipboard()">📋 Copy</button>
+                        <button class="btn" onclick="copyToClipboard()">📋 Copy</button>
                     </div>
 
                     <div class="options-section">
@@ -863,14 +983,6 @@
                             </div>
                             <div class="help-text">(First selected key becomes H1, excluded from output)</div>
                         </div>
-                    </div>
-
-                    <div class="preview-section" id="preview-section">
-                        <div class="preview-header">
-                            <span class="preview-title">Output Preview</span>
-                            <button class="preview-close-btn" onclick="closePreview()">Close</button>
-                        </div>
-                        <div class="preview-content" id="preview-content"></div>
                     </div>
                 `;
 
