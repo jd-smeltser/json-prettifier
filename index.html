@@ -631,23 +631,27 @@
             if (Array.isArray(obj)) {
                 obj.forEach((item, index) => {
                     if (typeof item === 'object' && item !== null) {
-                        markdown += `\n${heading} Item ${index + 1}\n\n`;
+                        markdown += `${heading} Item ${index + 1}\n\n`;
                         markdown += convertToMarkdown(item, level + 1);
                     } else {
-                        markdown += `- ${item}\n`;
+                        markdown += `${item}\n\n`;
                     }
                 });
             } else if (obj && typeof obj === 'object') {
                 Object.entries(obj).forEach(([key, value]) => {
-                    if (typeof value === 'object' && value !== null) {
-                        markdown += `\n${heading} ${key}\n\n`;
+                    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                        markdown += `${heading} ${key}\n\n`;
+                        markdown += convertToMarkdown(value, level + 1);
+                    } else if (Array.isArray(value)) {
+                        markdown += `${heading} ${key}\n\n`;
                         markdown += convertToMarkdown(value, level + 1);
                     } else {
-                        markdown += `- **${key}**: \`${value}\`\n`;
+                        markdown += `${heading} ${key}\n\n`;
+                        markdown += `${value}\n\n`;
                     }
                 });
             } else {
-                markdown += `${obj}\n`;
+                markdown += `${obj}\n\n`;
             }
 
             return markdown;
