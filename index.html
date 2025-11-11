@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Prettifier</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .info {
+            background: #f0f9ff;
+            border-left: 4px solid #0284c7;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .info h2 {
+            color: #0284c7;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .info p {
+            color: #334155;
+            margin: 5px 0;
+            font-size: 0.95em;
+        }
+
+        .info code {
+            background: #e0f2fe;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #0369a1;
+        }
+
+        .error {
+            background: #fef2f2;
+            border-left: 4px solid #dc2626;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            color: #991b1b;
+        }
+
+        .success {
+            background: #f0fdf4;
+            border-left: 4px solid #16a34a;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .success h3 {
+            color: #15803d;
+            margin-bottom: 10px;
+        }
+
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .json-key {
+            color: #60a5fa;
+        }
+
+        .json-string {
+            color: #34d399;
+        }
+
+        .json-number {
+            color: #fbbf24;
+        }
+
+        .json-boolean {
+            color: #f472b6;
+        }
+
+        .json-null {
+            color: #94a3b8;
+        }
+
+        .stats {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 6px;
+            color: #64748b;
+            font-size: 0.9em;
+        }
+
+        .copy-button {
+            background: #0284c7;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 15px;
+            transition: background 0.3s;
+        }
+
+        .copy-button:hover {
+            background: #0369a1;
+        }
+
+        .copy-button:active {
+            background: #075985;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>JSON Prettifier</h1>
+        <div class="card">
+            <div id="content"></div>
+        </div>
+        <div class="footer">
+            <p>Created with GitHub Pages</p>
+        </div>
+    </div>
+
+    <script>
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'json-null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        function countJsonElements(obj) {
+            let keys = 0;
+            let values = 0;
+
+            function count(item) {
+                if (Array.isArray(item)) {
+                    values += item.length;
+                    item.forEach(count);
+                } else if (item !== null && typeof item === 'object') {
+                    const objKeys = Object.keys(item);
+                    keys += objKeys.length;
+                    objKeys.forEach(key => count(item[key]));
+                } else {
+                    values++;
+                }
+            }
+
+            count(obj);
+            return { keys, values };
+        }
+
+        function copyToClipboard() {
+            const pre = document.querySelector('pre');
+            const text = pre.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const button = document.querySelector('.copy-button');
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        function displayJson() {
+            const contentDiv = document.getElementById('content');
+            const jsonString = getUrlParameter('jsonString');
+
+            if (!jsonString) {
+                contentDiv.innerHTML = `
+                    <div class="info">
+                        <h2>How to use</h2>
+                        <p>Add your JSON to the URL using the <code>jsonString</code> parameter:</p>
+                        <p style="margin-top: 10px;"><code>${window.location.origin}${window.location.pathname}?jsonString={"key":"value"}</code></p>
+                        <p style="margin-top: 15px;"><strong>Example:</strong></p>
+                        <p><code>${window.location.origin}${window.location.pathname}?jsonString={"name":"John","age":30,"city":"New York"}</code></p>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                // Decode URL-encoded string
+                const decodedString = decodeURIComponent(jsonString);
+
+                // Parse JSON
+                const jsonObj = JSON.parse(decodedString);
+
+                // Prettify JSON
+                const prettified = JSON.stringify(jsonObj, null, 2);
+
+                // Get stats
+                const stats = countJsonElements(jsonObj);
+                const charCount = prettified.length;
+                const lineCount = prettified.split('\n').length;
+
+                // Apply syntax highlighting
+                const highlighted = syntaxHighlight(prettified);
+
+                contentDiv.innerHTML = `
+                    <div class="success">
+                        <h3>JSON Successfully Parsed</h3>
+                    </div>
+                    <pre>${highlighted}</pre>
+                    <button class="copy-button" onclick="copyToClipboard()">Copy to Clipboard</button>
+                    <div class="stats">
+                        <strong>Stats:</strong> ${stats.keys} keys, ${lineCount} lines, ${charCount} characters
+                    </div>
+                `;
+            } catch (error) {
+                contentDiv.innerHTML = `
+                    <div class="error">
+                        <h3>Error parsing JSON</h3>
+                        <p><strong>Error message:</strong> ${error.message}</p>
+                        <p style="margin-top: 10px;">Please make sure your JSON is valid and properly URL-encoded.</p>
+                    </div>
+                    <div class="info">
+                        <h2>Tips:</h2>
+                        <p>• Make sure your JSON is valid</p>
+                        <p>• Special characters should be URL-encoded</p>
+                        <p>• Use <code>encodeURIComponent()</code> in JavaScript to encode your JSON string</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Run on page load
+        displayJson();
+    </script>
+</body>
+</html>
