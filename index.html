@@ -208,32 +208,12 @@
             margin-right: 8px;
         }
 
-        .tabs-container {
+        .buttons-bar {
+            padding: 16px 20px;
             display: flex;
-            padding: 0 20px;
-            gap: 0;
-            border-bottom: 1px solid var(--glass-border);
+            gap: 12px;
             background: var(--glass-bg);
-            position: sticky;
-            top: 57px;
-            z-index: 99;
-        }
-
-        .tab {
-            padding: 12px 24px;
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-        }
-
-        .tab.active {
-            color: var(--accent-primary);
-            border-bottom-color: var(--accent-primary);
+            border-bottom: 1px solid var(--glass-border);
         }
 
         .options-section {
@@ -242,15 +222,47 @@
             border-bottom: 1px solid var(--glass-border);
         }
 
+        .option-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
         .option-row {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
+            gap: 12px;
+            margin-bottom: 12px;
         }
 
         .option-row:last-child {
             margin-bottom: 0;
+        }
+
+        .format-toggle {
+            display: flex;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .format-option {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .format-option.active {
+            background: var(--accent-primary);
+            color: white;
         }
 
         .checkbox-wrapper {
@@ -278,11 +290,46 @@
             margin-top: 4px;
         }
 
-        .output-preview {
+        .preview-section {
             padding: 20px;
             background: var(--bg-secondary);
+            display: none;
+        }
+
+        .preview-section.show {
+            display: block;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .preview-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .preview-close-btn {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            padding: 4px 8px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .preview-content {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
             border-radius: 12px;
-            margin: 20px;
+            padding: 20px;
             font-family: 'SF Mono', 'Consolas', monospace;
             font-size: 13px;
             line-height: 1.6;
@@ -291,16 +338,6 @@
             white-space: pre-wrap;
             max-height: 400px;
             overflow-y: auto;
-        }
-
-        .actions-bar {
-            padding: 16px 20px;
-            display: flex;
-            gap: 12px;
-            background: var(--glass-bg);
-            border-top: 1px solid var(--glass-border);
-            position: sticky;
-            bottom: 0;
         }
 
         .btn {
@@ -379,84 +416,6 @@
             font-size: 13px;
         }
 
-        .preview-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .preview-overlay.show {
-            display: flex;
-        }
-
-        .preview-content {
-            background: var(--bg-primary);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            max-width: 90%;
-            max-height: 80%;
-            overflow: auto;
-            padding: 24px;
-            position: relative;
-        }
-
-        .preview-close {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 8px;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 20px;
-        }
-
-        .margin-tap-hint {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--accent-primary);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            opacity: 0.8;
-            pointer-events: none;
-            z-index: 50;
-        }
-
-        /* Tap zones for preview */
-        .tap-zone {
-            position: fixed;
-            top: 0;
-            bottom: 0;
-            width: 40px;
-            z-index: 10;
-            cursor: pointer;
-        }
-
-        .tap-zone.left {
-            left: 0;
-        }
-
-        .tap-zone.right {
-            right: 0;
-        }
 
         @media (min-width: 768px) {
             .container {
@@ -509,16 +468,6 @@
     </div>
 
     <div class="container" id="app-content"></div>
-
-    <div class="preview-overlay" id="preview-overlay" onclick="closePreview()">
-        <div class="preview-content" onclick="event.stopPropagation()">
-            <div class="preview-close" onclick="closePreview()">×</div>
-            <div id="preview-output"></div>
-        </div>
-    </div>
-
-    <div class="tap-zone left" onclick="showPreview()"></div>
-    <div class="tap-zone right" onclick="showPreview()"></div>
 
     <script>
         let jsonData = null;
@@ -773,21 +722,22 @@
         }
 
         function showPreview() {
-            const overlay = document.getElementById('preview-overlay');
-            const output = document.getElementById('preview-output');
+            const previewSection = document.getElementById('preview-section');
+            const previewContent = document.getElementById('preview-content');
             const text = getOutput();
 
             if (outputFormat === 'json') {
-                output.innerHTML = `<pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word;">${text}</pre>`;
+                previewContent.innerHTML = `<pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word;">${escapeHtml(text)}</pre>`;
             } else {
-                output.innerHTML = `<div class="markdown-output">${text}</div>`;
+                previewContent.innerHTML = `<div class="markdown-output">${text}</div>`;
             }
 
-            overlay.classList.add('show');
+            previewSection.classList.add('show');
+            previewSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
         function closePreview() {
-            document.getElementById('preview-overlay').classList.remove('show');
+            document.getElementById('preview-section').classList.remove('show');
         }
 
         function copyToClipboard() {
@@ -813,10 +763,10 @@
             updateStats();
         }
 
-        function switchTab(format) {
+        function switchFormat(format) {
             outputFormat = format;
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.toggle('active', tab.dataset.format === format);
+            document.querySelectorAll('.format-option').forEach(option => {
+                option.classList.toggle('active', option.dataset.format === format);
             });
 
             // Show/hide markdown options
@@ -824,10 +774,22 @@
             if (mdOptions) {
                 mdOptions.style.display = format === 'markdown' ? 'block' : 'none';
             }
+
+            // Update preview if it's showing
+            const previewSection = document.getElementById('preview-section');
+            if (previewSection && previewSection.classList.contains('show')) {
+                showPreview();
+            }
         }
 
         function toggleRootHeader() {
             includeRootHeader = document.getElementById('root-header-toggle').checked;
+
+            // Update preview if it's showing
+            const previewSection = document.getElementById('preview-section');
+            if (previewSection && previewSection.classList.contains('show')) {
+                showPreview();
+            }
         }
 
         function updateStats() {
@@ -848,7 +810,8 @@
                         <p style="margin-top: 20px;"><strong>Example:</strong></p>
                         <p><code>?jsonString={"name":"John","age":30}</code></p>
                         <p style="margin-top: 20px;">✨ Stringified JSON is auto-parsed!</p>
-                        <p style="margin-top: 20px;">👈👉 Tap margins to preview output</p>
+                        <p style="margin-top: 20px;">📱 Beautiful pill-based UI</p>
+                        <p>👁️ Click Preview to see output</p>
                     </div>
                 `;
                 return;
@@ -874,16 +837,25 @@
 
                     <div class="interactive-json">${jsonHTML}</div>
 
-                    <div class="tabs-container">
-                        <button class="tab active" data-format="json" onclick="switchTab('json')">JSON</button>
-                        <button class="tab" data-format="markdown" onclick="switchTab('markdown')">Markdown</button>
+                    <div class="buttons-bar">
+                        <button class="btn" onclick="showPreview()">👁️ Preview</button>
+                        <button class="btn secondary" onclick="copyToClipboard()">📋 Copy</button>
                     </div>
 
                     <div class="options-section">
+                        <div class="option-label">Output Format</div>
                         <div class="option-row">
-                            <button class="btn secondary" onclick="selectAll()">Select All</button>
-                            <button class="btn secondary" onclick="deselectAll()">Clear</button>
+                            <div class="format-toggle">
+                                <button class="format-option active" data-format="json" onclick="switchFormat('json')">JSON</button>
+                                <button class="format-option" data-format="markdown" onclick="switchFormat('markdown')">Markdown</button>
+                            </div>
                         </div>
+
+                        <div class="option-row">
+                            <button class="btn secondary" style="flex: 1;" onclick="selectAll()">Select All</button>
+                            <button class="btn secondary" style="flex: 1;" onclick="deselectAll()">Clear</button>
+                        </div>
+
                         <div id="md-options" style="display: none; margin-top: 12px;">
                             <div class="checkbox-wrapper">
                                 <input type="checkbox" id="root-header-toggle" onchange="toggleRootHeader()">
@@ -893,12 +865,13 @@
                         </div>
                     </div>
 
-                    <div class="actions-bar">
-                        <button class="btn" onclick="copyToClipboard()">📋 Copy</button>
-                        <button class="btn secondary" onclick="showPreview()">👁️ Preview</button>
+                    <div class="preview-section" id="preview-section">
+                        <div class="preview-header">
+                            <span class="preview-title">Output Preview</span>
+                            <button class="preview-close-btn" onclick="closePreview()">Close</button>
+                        </div>
+                        <div class="preview-content" id="preview-content"></div>
                     </div>
-
-                    <div class="margin-tap-hint">👈 Tap margins to preview 👉</div>
                 `;
 
                 updateStats();
