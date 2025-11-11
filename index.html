@@ -578,6 +578,43 @@
             return urlParams.get(name);
         }
 
+        function destringifyJSON(obj) {
+            if (obj === null || obj === undefined) {
+                return obj;
+            }
+
+            // If it's a string, try to parse it as JSON
+            if (typeof obj === 'string') {
+                try {
+                    const parsed = JSON.parse(obj);
+                    // Recursively destringify the parsed result
+                    return destringifyJSON(parsed);
+                } catch (e) {
+                    // Not valid JSON, return as-is
+                    return obj;
+                }
+            }
+
+            // If it's an array, recursively destringify each element
+            if (Array.isArray(obj)) {
+                return obj.map(item => destringifyJSON(item));
+            }
+
+            // If it's an object, recursively destringify each property
+            if (typeof obj === 'object') {
+                const result = {};
+                for (const key in obj) {
+                    if (obj.hasOwnProperty(key)) {
+                        result[key] = destringifyJSON(obj[key]);
+                    }
+                }
+                return result;
+            }
+
+            // For primitives (number, boolean), return as-is
+            return obj;
+        }
+
         function syntaxHighlight(json) {
             json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
@@ -898,6 +935,7 @@
                             <p style="margin-top: 10px;"><code>${window.location.origin}${window.location.pathname}?jsonString={"key":"value"}</code></p>
                             <p style="margin-top: 15px;"><strong>Example:</strong></p>
                             <p><code>${window.location.origin}${window.location.pathname}?jsonString={"name":"John","age":30,"city":"New York"}</code></p>
+                            <p style="margin-top: 15px;"><strong>✨ Auto-parsing:</strong> Stringified JSON values are automatically parsed and expanded!</p>
                         </div>
                     </div>
                 `;
@@ -907,6 +945,9 @@
             try {
                 const decodedString = decodeURIComponent(jsonString);
                 jsonData = JSON.parse(decodedString);
+
+                // Automatically destringify any JSON string values
+                jsonData = destringifyJSON(jsonData);
 
                 // Generate top-level keys
                 const topLevelKeys = Object.keys(jsonData);
