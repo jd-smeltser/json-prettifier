@@ -554,10 +554,9 @@
 
     <script>
         let jsonData = null;
-        let selectedKeys = new Set();
+        let selectedKeys = new Set(); // Set preserves insertion order in JavaScript
         let outputFormat = 'json'; // 'json' or 'markdown'
         let includeRootHeader = false;
-        let rootHeaderName = 'Document';
 
         // Theme management
         function toggleTheme() {
@@ -653,8 +652,13 @@
         function buildSelectedJson() {
             if (selectedKeys.size === 0) return jsonData;
 
+            // Get keys to compile (exclude first key if root header is enabled and in markdown mode)
+            const keysToCompile = getKeysToCompile();
+
+            if (keysToCompile.length === 0) return {};
+
             const result = {};
-            selectedKeys.forEach(fullKey => {
+            keysToCompile.forEach(fullKey => {
                 const keys = fullKey.split('.');
                 let current = result;
                 let sourceCurrent = jsonData;
@@ -675,18 +679,53 @@
             return result;
         }
 
+        function getKeysToCompile() {
+            const keysArray = Array.from(selectedKeys);
+
+            // If root header enabled in markdown mode, exclude the first key
+            if (includeRootHeader && outputFormat === 'markdown' && keysArray.length > 0) {
+                return keysArray.slice(1); // Skip first key
+            }
+
+            return keysArray;
+        }
+
+        function getFirstSelectedKey() {
+            return Array.from(selectedKeys)[0];
+        }
+
+        function getRootHeaderName() {
+            if (!includeRootHeader || selectedKeys.size === 0) {
+                return null;
+            }
+
+            const firstKey = getFirstSelectedKey();
+            if (!firstKey) return null;
+
+            // Get the value of the first selected key
+            const value = getValueAtPath(jsonData, firstKey);
+
+            // If value is a primitive, use it as header; if object/array, use the key name
+            if (value !== null && typeof value !== 'object') {
+                return String(value);
+            }
+
+            return firstKey.split('.').pop(); // Use the key name itself
+        }
+
         function buildMarkdown() {
             let markdown = '';
 
-            if (includeRootHeader && rootHeaderName) {
-                markdown = `# ${rootHeaderName}\n\n`;
+            const rootHeader = getRootHeaderName();
+            if (rootHeader) {
+                markdown = `# ${rootHeader}\n\n`;
             }
 
             if (selectedKeys.size === 0) {
-                markdown += convertToMarkdown(jsonData, includeRootHeader ? 2 : 1);
+                markdown += convertToMarkdown(jsonData, rootHeader ? 2 : 1);
             } else {
                 const selectedData = buildSelectedJson();
-                markdown += convertToMarkdown(selectedData, includeRootHeader ? 2 : 1);
+                markdown += convertToMarkdown(selectedData, rootHeader ? 2 : 1);
             }
 
             return markdown;
@@ -731,6 +770,18 @@
 
             if (outputFormat === 'json') {
                 const selectedData = buildSelectedJson();
+
+                // Validate JSON before displaying
+                if (!validateJSON(selectedData)) {
+                    outputSection.innerHTML = `
+                        <div class="error-banner">
+                            <h3>Invalid JSON Output</h3>
+                            <p>The selected keys cannot be compiled into valid JSON. Please adjust your selection.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
                 const prettified = JSON.stringify(selectedData, null, 2);
                 const highlighted = syntaxHighlight(prettified);
                 outputSection.innerHTML = `<pre>${highlighted}</pre>`;
@@ -766,10 +817,13 @@
             updateOutput();
         }
 
-        function updateRootHeaderName() {
-            rootHeaderName = event.target.value || 'Document';
-            if (includeRootHeader) {
-                updateOutput();
+        function validateJSON(obj) {
+            try {
+                JSON.stringify(obj);
+                JSON.parse(JSON.stringify(obj));
+                return true;
+            } catch (e) {
+                return false;
             }
         }
 
@@ -777,6 +831,13 @@
             let text;
             if (outputFormat === 'json') {
                 const selectedData = buildSelectedJson();
+
+                // Validate JSON
+                if (!validateJSON(selectedData)) {
+                    alert('Error: Unable to generate valid JSON from selection');
+                    return;
+                }
+
                 text = JSON.stringify(selectedData, null, 2);
             } else {
                 text = buildMarkdown();
@@ -789,6 +850,8 @@
                 setTimeout(() => {
                     button.innerHTML = originalText;
                 }, 2000);
+            }).catch((err) => {
+                alert('Failed to copy to clipboard: ' + err.message);
             });
         }
 
@@ -882,15 +945,11 @@
                         <div class="markdown-options hidden" id="markdown-options">
                             <div class="checkbox-wrapper">
                                 <input type="checkbox" id="root-header-toggle" onchange="toggleRootHeader()">
-                                <label for="root-header-toggle">Include Root Header</label>
+                                <label for="root-header-toggle">Use First Selected Key as Root Header</label>
                             </div>
-                            <input
-                                type="text"
-                                class="text-input"
-                                id="root-header-name"
-                                placeholder="Enter root header name..."
-                                value="Document"
-                                oninput="updateRootHeaderName()">
+                            <span class="controls-label" style="font-size: 0.85em; color: var(--text-muted);">
+                                (First selected key's value becomes H1, excluded from output)
+                            </span>
                         </div>
 
                         <div class="selection-section">
